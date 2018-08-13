@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>window error</title>
+	<script type="text/javascript" async>
+			
+//var initiation
+			var errorStack=[{message:null,url:null,linenumber:null}]; //stack for error 
+			//let errObj={}; // error object
+
+			var clientDb={};
+			clientDb.webdb={};
+
+			clientDb.webdb.db=null;
+
+			// errObj.message="hi";
+			// errObj.url='ji';
+			// errObj.linenumber="sfknj";
+			
+		
+//Web DB starts
+			
+			//opening DB
+			clientDb.webdb.open=function(){
+				var dbSize=5*1024*1024;
+				console.log("open");
+				clientDb.webdb.db=openDatabase("ErrorDB","1","Error storage",dbSize);
+
+			}
+
+			//OnError condition
+			clientDb.webdb.onerror=function(tx,e){
+				console.log("Error in Db");
+			}
+
+			//OnSuccess Codition to load data
+			clientDb.webdb.onSuccess=function(){
+				clientDb.webdb.getErrorDetails(loadError);
+			}
+
+			//creating and checking whether the a table exist
+			clientDb.webdb.createTable=function(){
+				console.log("table created or cheecked");
+				var dbObj=clientDb.webdb.db;
+				dbObj.transaction(function(tx){
+					tx.executeSql("CREATE TABLE IF NOT EXISTS errorStore(ID INTEGER PRIMARY KEY ASC,message TEXT,url TEXT,linenumber TEXT,updated_At DATETIME)",[]);
+					console.log("CREATED");
+
+				});
+			}
+			//Adding ErrorData
+			clientDb.webdb.addElements=function(errData){
+				var db=clientDb.webdb.db;
+				var eda=errData;
+				console.log("Size of element to be added " + eda.length);
+					db.transaction(function(tx){
+						for(var i=0;i<eda.length;i++){
+						var updated=new Date();
+						if(eda[i].message!=null){
+							msg=eda[i].message;
+						url=eda[i].url;
+						ln=eda[i].linenumber;
+						tx.executeSql("INSERT INTO errorStore(message,url,linenumber,updated_At) VALUES (?,?,?,?)",
+							[msg, url,ln,updated],
+							);
+					}
+					}
+				});
+			}
+			//Getting all the data
+			clientDb.webdb.getErrorDetails = function(renderFunc) {
+  				var db = clientDb.webdb.db;
+ 				db.transaction(function(tx) {
+   				tx.executeSql("SELECT * FROM todo", [], renderFunc,clientDb.webdb.onError);
+  				});
+			}
+			//Loading Error For OUTPUT
+					function loadError(tx, rs) {
+					  var rowOutput = "";
+					  var list = document.getElementById("list");
+					  for (var i=0; i < rs.rows.length; i++) {
+					    rowOutput += renderList(rs.rows.item(i));
+					  }
+
+					  list.innerHTML = rowOutput;
+					}
+							function renderList(row) {
+							  return row.ID+" "+row.message+" ";
+							}
+//Initiating the DB
+			(function() {
+				clientDb.webdb.open();
+	 			clientDb.webdb.createTable();
+	            clientDb.webdb.getErrorDetails(loadError);
+            })();
+//web DB ends
+
+var i=0;
+// stack addtion function
+function pushToStack(message,url,linenumber){
+	alert(linenumber+" "+i);
+		if(errorStack.length>=2){  // For The size of the stack exceeds certain limit 
+			console.log('limit case');
+			 clientDb.webdb.addElements(errorStack);
+			errorStack=[{message:null,url:null,linenumber:null}];
+		}
+      
+       errorStack.push({message,url,linenumber});
+       i++;
+       return true;
+}
+//on error the error is caught by the function added to the stack
+window.onerror=function(message,url,linenumber){
+	pushToStack(message,url,linenumber);
+	return ;
+};
+
+//Check Periodically
+		setInterval(check,30000);
+			function check(){
+				console.log("Periodically case");
+					if(errorStack.length==1){
+						errObj.message="NO Error";errObj.url="NONE";errObj.linenumber="NONE";
+						//An error
+						errorStack.pushToStack("No Error","-","-");
+					clientDb.webdb.addElements(errorStack);
+					errorStack=[{message:null,url:null,linenumber:null}];
+				  }
+				  clientDb.webdb.addElements(errorStack);
+				  errorStack=[{message:null,url:null,linenumber:null}];
+				}
+//window Close Event
+		window.addEventListener("beforeunload", function (e) {
+			console.log("Close Intention");
+		  clientDb.webdb.addElements(errorStack);
+		  var confirmationMessage = "\o/";		
+		  (e || window.event).returnValue = confirmationMessage;     
+		  return confirmationMessage;                               
+		});
+		sdjkj;
+		// Error 2
+	</script>
+</head>
+<body >
+<div id="div" >
+	<!--Onerror for image 3,4 & 5-->
+	<img src="fnvj.jpg" onerror="return pushToStack('Image not loaded',this.url,'67')">
+	<img src="fnj.jpg" onerror="return pushToStack('Image not loaded',this.url,'68')">
+	<img src="fsanj.jpg" onerror="return pushToStack('Image not loaded',this.url,'69')">
+</div>
+<div id="list"></div>
+</body>
+</html>
